@@ -1,0 +1,48 @@
+{
+  "name": "halosense",
+  "version": "1.0.0",
+  "description": "Premium Windows PC health dashboard.",
+  "main": "main.js",
+  "author": "HaloSense",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "portable": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.halosense.app",
+    "productName": "HaloSense",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "renderer.js",
+      "style.css",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "HaloSense"
+    }
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  }
+}

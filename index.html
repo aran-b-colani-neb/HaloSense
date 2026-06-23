@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HaloSense</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sky">
+    <div class="aurora aurora-one"></div>
+    <div class="aurora aurora-two"></div>
+    <div class="heaven-ray ray-one"></div>
+    <div class="heaven-ray ray-two"></div>
+    <div class="grid-glow"></div>
+    <div class="soft-orb"></div>
+    <div class="cloud cloud-one"></div>
+    <div class="cloud cloud-two"></div>
+  </div>
+
+  <main class="app">
+    <header class="top">
+      <div>
+        <div class="status-pill">
+          <span class="pulse"></span>
+          Live scan active
+        </div>
+
+        <h1 class="brand-title">
+          <span class="wing wing-left"></span>
+          <span>HaloSense</span>
+          <span class="wing wing-right"></span>
+        </h1>
+      </div>
+
+      <p>Premium one-page PC health command center with safe optimization guidance.</p>
+    </header>
+
+    <section class="hero">
+      <div class="score-wrap">
+        <div class="halo"></div>
+        <div class="score-ring">
+          <span id="healthScore">--</span>
+          <small>/100</small>
+        </div>
+      </div>
+
+      <div class="hero-text">
+        <p class="eyebrow">SYSTEM VERDICT</p>
+        <h2 id="statusTitle">Scanning...</h2>
+        <p id="statusText">Watching your PC in real time.</p>
+      </div>
+
+      <div class="hero-actions">
+        <button id="optimizeBtn" class="primary-btn">Run Safe Optimizer</button>
+        <button id="reportBtn" class="secondary-btn">Save Health Report</button>
+        <button id="settingsBtn" class="secondary-btn">Settings</button>
+        <p id="optimizerStatus">No files are deleted. No system settings are changed.</p>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="tiles">
+        <button class="tile" data-view="cpu">
+          <span class="icon icon-cpu"></span>
+          <span>CPU</span>
+          <strong id="cpuUsage">--%</strong>
+          <div class="bar"><div id="cpuBar" class="fill"></div></div>
+        </button>
+
+        <button class="tile" data-view="gpu">
+          <span class="icon icon-gpu"></span>
+          <span>GPU</span>
+          <strong id="gpuUsage">--%</strong>
+          <div class="bar"><div id="gpuBar" class="fill"></div></div>
+        </button>
+
+        <button class="tile" data-view="memory">
+          <span class="icon icon-memory"></span>
+          <span>Memory</span>
+          <strong id="ramUsage">--%</strong>
+          <div class="bar"><div id="ramBar" class="fill"></div></div>
+        </button>
+
+        <button class="tile" data-view="storage">
+          <span class="icon icon-storage"></span>
+          <span>Storage</span>
+          <strong id="storageUsage">--%</strong>
+          <div class="bar"><div id="storageBar" class="fill"></div></div>
+        </button>
+
+        <button class="tile" data-view="temps">
+          <span class="icon icon-temp"></span>
+          <span>Temps</span>
+          <strong id="tempSummary">--</strong>
+          <div class="bar"><div id="tempBar" class="fill"></div></div>
+        </button>
+
+        <button class="tile" data-view="network">
+          <span class="icon icon-network"></span>
+          <span>Network</span>
+          <strong id="networkSummary">--</strong>
+          <div class="bar"><div id="networkBar" class="fill good"></div></div>
+        </button>
+
+        <button class="tile" data-view="system">
+          <span class="icon icon-system"></span>
+          <span>System</span>
+          <strong id="systemSummary">--</strong>
+          <div class="bar"><div id="systemBar" class="fill good"></div></div>
+        </button>
+
+        <button class="tile" data-view="apps">
+          <span class="icon icon-process"></span>
+          <span>Apps</span>
+          <strong id="appsSummary">Live</strong>
+          <div class="bar"><div id="appsBar" class="fill good"></div></div>
+        </button>
+
+        <button class="tile" data-view="power">
+          <span class="icon icon-power"></span>
+          <span>Power</span>
+          <strong id="powerSummary">--</strong>
+          <div class="bar"><div id="powerBar" class="fill good"></div></div>
+        </button>
+
+        <button class="tile" data-view="display">
+          <span class="icon icon-display"></span>
+          <span>Display</span>
+          <strong id="displaySummary">--</strong>
+          <div class="bar"><div id="displayBar" class="fill good"></div></div>
+        </button>
+
+        <button class="tile" data-view="security">
+          <span class="icon icon-security"></span>
+          <span>Security</span>
+          <strong id="securitySummary">--</strong>
+          <div class="bar"><div id="securityBar" class="fill good"></div></div>
+        </button>
+      </div>
+
+      <div class="main-panels">
+        <section class="detail-panel" id="detailPanel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">DETAIL VIEW</p>
+              <h3 id="detailTitle">Overview</h3>
+              <p id="detailSubtitle">Basic system summary.</p>
+            </div>
+            <button id="taskManagerBtn" class="small-btn">Task Manager</button>
+          </div>
+
+          <div id="detailBody" class="detail-body"></div>
+        </section>
+
+        <aside class="side-panel">
+          <div class="side-card">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="eyebrow">ADVISOR</p>
+                <h3>AI Fix Advisor</h3>
+              </div>
+            </div>
+            <div id="recommendations" class="advisor-list">Checking...</div>
+          </div>
+
+          <div class="side-card">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="eyebrow">SAFE PLAN</p>
+                <h3>Optimizer Plan</h3>
+              </div>
+            </div>
+
+            <div id="fixPlan" class="fix-plan">
+              Press Run Safe Optimizer to generate a safe action plan.
+            </div>
+
+            <div class="button-row">
+              <button id="storageSettingsBtn" class="small-btn">Storage</button>
+              <button id="startupSettingsBtn" class="small-btn">Startup</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
