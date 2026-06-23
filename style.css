@@ -1311,3 +1311,239 @@ body {
     grid-template-rows: minmax(0, 1fr);
   }
 }
+
+/* Custom frameless HaloSense title bar */
+
+.halo-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  z-index: 999999;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(143, 231, 255, 0.24), transparent 30%),
+    radial-gradient(circle at 82% 38%, rgba(190, 184, 255, 0.18), transparent 32%),
+    linear-gradient(90deg, rgba(5, 13, 24, 0.98), rgba(10, 26, 44, 0.96), rgba(5, 13, 24, 0.98));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(143, 231, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.halo-titlebar::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 168px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(143, 231, 255, 0.78), rgba(233, 215, 173, 0.5), transparent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.halo-title-left {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 18px;
+}
+
+.halo-title-orb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 30%, #ffffff, rgba(255, 255, 255, 0.15) 32%, transparent 34%),
+    conic-gradient(from 130deg, var(--pearl), var(--sky), var(--violet), var(--platinum), var(--pearl));
+  box-shadow:
+    0 0 16px rgba(143, 231, 255, 0.95),
+    0 0 36px rgba(190, 184, 255, 0.38),
+    inset 0 0 8px rgba(255, 255, 255, 0.32);
+}
+
+.halo-title-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.halo-title-name {
+  color: var(--pearl);
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: 0.18px;
+  text-shadow: 0 0 18px rgba(143, 231, 255, 0.18);
+}
+
+.halo-title-sub {
+  color: rgba(194, 208, 223, 0.78);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.halo-title-center {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(143, 231, 255, 0.07);
+}
+
+.halo-title-chip {
+  color: rgba(237, 247, 255, 0.9);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.halo-title-score {
+  color: var(--champagne);
+  font-size: 11px;
+  font-weight: 950;
+  padding-left: 9px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  white-space: nowrap;
+}
+
+.halo-window-actions {
+  justify-self: end;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  -webkit-app-region: no-drag;
+}
+
+.halo-window-btn {
+  position: relative;
+  width: 54px;
+  height: 52px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgba(251, 253, 255, 0.8);
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.halo-window-btn:hover {
+  background: rgba(143, 231, 255, 0.13);
+  color: #ffffff;
+  box-shadow: inset 0 -2px 0 rgba(143, 231, 255, 0.55);
+}
+
+.halo-window-btn:active {
+  background: rgba(143, 231, 255, 0.2);
+}
+
+.halo-window-btn span {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 16px;
+  height: 16px;
+}
+
+#winMinimize span::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+#winMaximize span::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+}
+
+#winClose span::before,
+#winClose span::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 7px;
+  width: 13px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+#winClose span::before {
+  transform: rotate(45deg);
+}
+
+#winClose span::after {
+  transform: rotate(-45deg);
+}
+
+.halo-close-btn:hover {
+  background: rgba(255, 76, 104, 0.92);
+  color: #ffffff;
+  box-shadow:
+    0 0 28px rgba(255, 76, 104, 0.42),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.32);
+}
+
+.app {
+  height: calc(100vh - 52px);
+  margin: 52px auto 0;
+}
+
+@media (max-width: 1180px) {
+  .app {
+    height: auto;
+    min-height: calc(100vh - 52px);
+  }
+
+  .halo-titlebar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .halo-title-center {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .halo-title-sub {
+    display: none;
+  }
+
+  .halo-window-btn {
+    width: 48px;
+  }
+}
+

@@ -7,6 +7,33 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="halo-titlebar">
+    <div class="halo-title-left">
+      <div class="halo-title-orb" aria-hidden="true"></div>
+      <div class="halo-title-copy">
+        <span class="halo-title-name">HaloSense</span>
+        <span class="halo-title-sub">Live PC Health</span>
+      </div>
+    </div>
+
+    <div class="halo-title-center">
+      <span class="halo-title-chip">Command Center</span>
+      <span id="titlebarScore" class="halo-title-score">Scanning</span>
+    </div>
+
+    <div class="halo-window-actions">
+      <button id="winMinimize" class="halo-window-btn" type="button" aria-label="Minimize" title="Minimize">
+        <span></span>
+      </button>
+      <button id="winMaximize" class="halo-window-btn" type="button" aria-label="Maximize" title="Maximize">
+        <span></span>
+      </button>
+      <button id="winClose" class="halo-window-btn halo-close-btn" type="button" aria-label="Close" title="Close">
+        <span></span>
+      </button>
+    </div>
+  </div>
+
   <div class="sky">
     <div class="aurora aurora-one"></div>
     <div class="aurora aurora-two"></div>

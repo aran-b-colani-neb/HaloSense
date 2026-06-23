@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, Menu } = require("electron");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -12,6 +12,8 @@ function createWindow() {
     height: 920,
     minWidth: 1180,
     minHeight: 780,
+    frame: false,
+    autoHideMenuBar: true,
     backgroundColor: "#060f1c",
     title: "HaloSense",
     webPreferences: {
@@ -20,6 +22,7 @@ function createWindow() {
     }
   });
 
+  Menu.setApplicationMenu(null);
   win.loadFile("index.html");
 }
 
@@ -568,6 +571,28 @@ ipcMain.handle("save-health-report", async (_, text) => {
   shell.showItemInFolder(filePath);
 
   return filePath;
+});
+
+
+ipcMain.on("window:minimize", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) win.minimize();
+});
+
+ipcMain.on("window:maximize", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
+});
+
+ipcMain.on("window:close", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) win.close();
 });
 
 app.whenReady().then(createWindow);

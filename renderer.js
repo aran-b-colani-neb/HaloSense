@@ -1073,6 +1073,7 @@ async function loadStats() {
     document.title = `HaloSense • ${score}/100`;
 
     setText("healthScore", score);
+    setText("titlebarScore", `${score}/100`);
 
     setText(
       "statusTitle",
@@ -1235,6 +1236,29 @@ el("startupSettingsBtn").addEventListener("click", () => {
 el("taskManagerBtn").addEventListener("click", () => {
   ipcRenderer.invoke("open-windows-tool", "taskmgr");
 });
+
+
+const haloMinimizeBtn = el("winMinimize");
+const haloMaximizeBtn = el("winMaximize");
+const haloCloseBtn = el("winClose");
+
+if (haloMinimizeBtn) {
+  haloMinimizeBtn.addEventListener("click", () => {
+    ipcRenderer.send("window:minimize");
+  });
+}
+
+if (haloMaximizeBtn) {
+  haloMaximizeBtn.addEventListener("click", () => {
+    ipcRenderer.send("window:maximize");
+  });
+}
+
+if (haloCloseBtn) {
+  haloCloseBtn.addEventListener("click", () => {
+    ipcRenderer.send("window:close");
+  });
+}
 
 applySettings();
 loadStats();
