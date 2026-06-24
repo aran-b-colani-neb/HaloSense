@@ -288,4 +288,6 @@ The long-term idea is for HaloSense to become more like a PC health assistant â€
 
 ## License
 
-MIT License
+All rights reserved.
+
+This project is not open source. You may not copy, modify, distribute, or reuse this code without permission from the owner.
