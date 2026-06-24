@@ -1,6 +1,6 @@
 {
   "name": "halosense",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Premium Windows PC health dashboard.",
   "main": "main.js",
   "author": "HaloSense",
