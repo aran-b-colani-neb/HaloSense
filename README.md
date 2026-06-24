@@ -1,92 +1,131 @@
-# 🌌 HaloSense
+# HaloSense
 
-**HaloSense** is a premium Windows PC health dashboard built with **Electron**. It gives users a clean command center for monitoring PC health, live performance, storage, temperatures, security, background apps, and system status in one place.
+HaloSense is a Windows desktop app I built because I got tired of checking five different places just to understand what my PC was doing.
 
-Instead of making users jump between Task Manager, Windows Settings, Storage, Windows Security, Display Settings, and Power Settings, HaloSense brings the most important system information into one polished desktop app.
+Task Manager tells part of the story. Windows Settings tells another part. Security, storage, power, display, uptime, background apps — they all live in different corners of Windows.
 
----
+HaloSense puts the important stuff in one place.
 
-## ✨ Overview
-
-HaloSense was built to make PC health easier to understand.
-
-Windows already has useful system information, but it is spread across many different tools and menus. HaloSense solves this by giving users one dashboard with live system stats, performance graphs, safe optimizer tools, health scoring, and quick access to useful Windows settings.
-
-The goal is simple:
-
-**Help users understand what their PC is doing without confusion.**
+It is not supposed to be some fake “one click fixes everything” optimizer. I wanted it to feel more like a clean little control room for your PC: open it, look around, and quickly know if your computer is chilling or struggling.
 
 ---
 
-## 🚀 Features
+## The idea
 
-- 🧠 Live PC health score
-- ⚙️ CPU usage monitoring
-- 🎮 GPU usage monitoring
-- 🧩 Memory usage monitoring
-- 💾 Storage usage overview
-- 🌡️ Temperature tracking when supported
-- 🌐 Network status
-- 🔋 Power information
-- 🖥️ Display information
-- 🛡️ Windows Security status
-- ⏱️ Uptime tracking
-- 📁 Top memory apps view
-- 📊 Task Manager-style performance graphs
-- 🧹 Smart safe optimizer
-- 📝 Health report export
-- 🔗 Shortcuts to useful Windows tools
-- 🪟 Custom frameless desktop title bar
-- ➖ Custom minimize button
-- ⬜ Custom maximize / restore button
-- ❌ Custom close button
-- 📦 Windows installer support
+The main question behind HaloSense was:
+
+**What if checking your PC health felt simple instead of annoying?**
+
+Most PC tools either look too technical, too old, or too scary. Some optimizer apps also act like they are going to magically fix your computer, but they can be risky or confusing.
+
+I wanted HaloSense to be different:
+
+- simple enough for normal users
+- useful enough for people who care about performance
+- careful enough to not break things
+- clean enough to feel like an actual desktop app
 
 ---
 
-## 🎯 Quality-of-Life Improvements
+## What HaloSense shows
 
-### ✅ 1. One dashboard instead of many Windows menus
-
-HaloSense combines useful system information into one clean screen.
-
-Users can quickly check CPU, GPU, memory, storage, temperatures, network, security, power, display, uptime, and top background apps without opening multiple Windows tools.
-
-This makes PC health easier to understand, especially for users who do not want to dig through Task Manager and Settings.
-
----
-
-### 📊 2. Task Manager-style performance graphs
-
-HaloSense includes live performance graphs with a clear **0–100% usage scale**.
-
-The graphs help users see performance trends over time instead of only seeing one number at a time. This makes it easier to notice spikes, heavy usage, system pressure, and performance changes.
-
-Graphs currently focus on:
+HaloSense gives you a live dashboard with:
 
 - CPU usage
 - GPU usage
 - Memory usage
 - Storage usage
-- Temperature history
+- Temperature info when Windows can provide it
+- Network status
+- Power info
+- Display info
+- Windows Security status
+- Uptime
+- Top memory apps
+- Overall PC health score
+
+The goal is not just to throw numbers on the screen. The goal is to help you understand what those numbers mean.
 
 ---
 
-### 🧹 3. Smarter safe optimizer
+## Why this exists
 
-HaloSense includes a smarter optimizer designed to help users reduce unnecessary background activity without being reckless.
+I built HaloSense because I wanted a faster way to answer questions like:
 
-The optimizer is conservative and avoids important system processes. It also protects RGB, lighting, peripheral, and device-control apps so the user’s PC lights and hardware utilities do not turn off unexpectedly.
+- Why does my PC feel slow?
+- What is eating my memory?
+- Is my storage getting too full?
+- Is my system under pressure?
+- Is something running in the background?
+- Does my PC look ready before I game or work?
+
+Windows already has answers to most of these questions, but they are scattered everywhere. HaloSense tries to make the first check faster.
 
 ---
 
-## 🛡️ Safety
+## My favorite part: the “PC slowdown detective” idea
 
-HaloSense is designed to be safe and conservative.
+One thing I want HaloSense to grow into is something I call **HaloSense Replay**.
 
-The optimizer does **not** delete personal files, remove important apps, edit the registry, or make risky system changes automatically.
+Most system monitor apps only show what is happening right now.
 
-Protected app categories include RGB, lighting, peripheral, and device-control apps such as:
+But when your PC starts lagging, the real question is usually:
+
+**What changed a few minutes ago?**
+
+HaloSense Replay is the idea of keeping a short local history of recent system activity so the app can help explain the story of a slowdown.
+
+For example, instead of only saying:
+
+**Memory is high**
+
+HaloSense could eventually say something more useful, like:
+
+**Your PC started slowing down around 8:42 PM. Chrome and Discord increased memory usage, CPU spiked, and your health score dropped shortly after.**
+
+That is the direction I want HaloSense to move toward: not just monitoring numbers, but helping users understand what caused the problem.
+
+---
+
+## Current features
+
+### PC health score
+
+HaloSense gives the system a quick health score based on the data it can read.
+
+It is meant to be a fast first impression. You can open the app and immediately get a rough idea of whether your PC looks healthy or under pressure.
+
+### Live dashboard
+
+The dashboard brings together the system information I usually find myself checking in different places.
+
+Instead of jumping between Task Manager, Settings, Security, Display, and Power menus, HaloSense shows the main things together.
+
+### Performance graphs
+
+HaloSense includes live performance graphs so you can see trends, not just single numbers.
+
+A number tells you what is happening right now. A graph helps you see if your PC is spiking, slowly climbing, or staying under pressure.
+
+### Top memory apps
+
+HaloSense shows which apps are using memory so you can quickly spot heavy background apps.
+
+This is helpful when the PC feels slow but you do not know what is causing it.
+
+### Safe optimizer
+
+HaloSense includes a conservative optimizer.
+
+I did not want it to be reckless. It does not delete personal files, uninstall apps, edit the registry, or make dangerous system changes.
+
+The goal is to reduce unnecessary background activity without touching important system processes.
+
+### RGB and device app protection
+
+A lot of people care about their RGB lighting, mouse software, keyboard software, fan software, and device-control apps.
+
+So HaloSense tries to avoid closing apps like:
 
 - SignalRGB
 - OpenRGB
@@ -99,30 +138,23 @@ Protected app categories include RGB, lighting, peripheral, and device-control a
 - SteelSeries apps
 - NZXT CAM
 
-This helps prevent the optimizer from accidentally closing lighting or device-control software.
+I added this because an optimizer should not accidentally turn off someone’s setup just to look like it “cleaned” something.
+
+### Health report export
+
+HaloSense can export a health report so you can save or share a quick snapshot of your PC status.
+
+### Windows shortcuts
+
+HaloSense also includes shortcuts to useful Windows tools so you can jump to the right place faster when you actually need the deeper settings.
 
 ---
 
-## 🧰 Tech Stack
+## Download and install
 
-HaloSense was built using:
+You do not need to clone the code to use HaloSense.
 
-- Electron
-- Node.js
-- HTML
-- CSS
-- JavaScript
-- PowerShell system queries
-- GitHub
-- electron-builder
-
----
-
-## 📦 How to Download and Install HaloSense
-
-You do **not** need to clone the repository to use HaloSense.
-
-To download and install the app:
+To install the app:
 
 1. Go to the latest release page:
 
@@ -130,19 +162,23 @@ To download and install the app:
 
 2. Scroll down to the **Assets** section.
 
-3. Download the installer file named something like:
+3. Download the `.exe` installer.
 
-   HaloSense Setup 1.0.2.exe
+   The file should look something like:
 
-4. After the download finishes, double-click the `.exe` file.
+   `HaloSense Setup 1.0.2.exe`
+
+4. Double-click the downloaded `.exe` file.
 
 5. Follow the installer steps.
 
-6. Launch HaloSense from the desktop shortcut or the Windows Start Menu.
+6. Open HaloSense from the desktop shortcut or from the Windows Start Menu.
 
-### Windows warning note
+---
 
-Windows may show an **Unknown Publisher** warning because the installer is not code-signed yet.
+## Windows warning
+
+Windows may show an **Unknown Publisher** warning because I have not code-signed the app yet.
 
 If you downloaded HaloSense from the official GitHub release page, you can continue by clicking:
 
@@ -151,62 +187,105 @@ If you downloaded HaloSense from the official GitHub release page, you can conti
 
 ---
 
-## 📌 Version History
+## Built with
 
-### v1.0.0 — First Release
+HaloSense was built with:
 
-- Built the first working HaloSense dashboard
-- Added live system monitoring
-- Added PC health score
-- Added CPU, GPU, memory, storage, network, security, display, power, and uptime panels
-- Added top memory apps view
-- Added safe optimizer
-- Added health report export
-- Created the first Windows installer
-- Published the project to GitHub
-
-### v1.0.1 — Custom Title Bar Update
-
-- Removed the default Electron title bar
-- Removed the File / Edit / View / Window menu
-- Added a custom HaloSense title bar
-- Added custom minimize, maximize, and close buttons
-- Improved the premium desktop app feel
-
-### v1.0.2 — Graphs and Smart Optimizer
-
-- Added taller performance graphs
-- Improved Task Manager-style graph layout
-- Added a clearer 0–100% usage scale
-- Improved CPU, GPU, memory, storage, and temperature tracking
-- Added smarter background process optimization
-- Protected RGB and lighting apps from being closed
+- Electron
+- Node.js
+- HTML
+- CSS
+- JavaScript
+- PowerShell system queries
+- electron-builder
+- GitHub Releases
 
 ---
 
-## 🧪 Project Status
+## Development note
 
-HaloSense is actively being improved.
+I spent multiple days building, testing, fixing, packaging, and shipping HaloSense.
 
-Current focus areas include:
+One important note: I did not have the project properly connected to the Hackatime servers during most of the work, so the tracked time may not fully show how much time I actually spent on the project.
 
-- Better performance graphs
-- Safer optimization tools
-- More helpful system insights
-- Cleaner desktop experience
-- Improved Windows installer releases
-- More polished quality-of-life features
+A lot of time went into testing system data, fixing weird Windows readings, improving the UI, making the installer, writing the release, and making sure the app felt usable.
 
 ---
 
-## 🤖 AI Usage
+## Version history
 
-AI was used only for debugging support.
+### v1.0.0
 
-The concept, project direction, design decisions, coding, testing, and final implementation were completed by me. AI helped identify issues faster and explain errors during development.
+First working version.
+
+Added:
+
+- Main PC health dashboard
+- Live system monitoring
+- Health score
+- Top memory apps
+- Safe optimizer
+- Health report export
+- Windows installer
+- First GitHub release
+
+### v1.0.1
+
+Polish update.
+
+Added:
+
+- Custom HaloSense title bar
+- Custom minimize button
+- Custom maximize / restore button
+- Custom close button
+- Removed the default Electron menu
+
+### v1.0.2
+
+Graphs and optimizer update.
+
+Added:
+
+- Taller performance graphs
+- Better graph layout
+- Clearer 0–100% usage scale
+- Smarter optimizer behavior
+- Protection for RGB and lighting apps
 
 ---
 
-## 📄 License
+## What I learned
 
-This project is released under the MIT License.
+This project taught me a lot about building real desktop apps with Electron.
+
+I learned more about:
+
+- reading Windows system data
+- using PowerShell from Node.js
+- building a custom desktop UI
+- making a frameless Electron window
+- creating custom window controls
+- packaging a Windows installer
+- managing GitHub releases
+- designing safer system tools
+
+The biggest thing I learned is that PC tools need trust. It is easy to make an app that shows a lot of numbers, but harder to make one that feels useful, safe, and understandable.
+
+That is what I am trying to do with HaloSense.
+
+---
+
+## Status
+
+HaloSense is still being improved.
+
+I want to keep making it cleaner, smarter, and more useful without turning it into an overcomplicated optimizer.
+
+The long-term idea is for HaloSense to become more like a PC health assistant — something that does not just show what is happening, but helps explain why it is happening.
+
+---
+
+## License
+
+MIT License
