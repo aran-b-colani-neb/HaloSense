@@ -485,22 +485,100 @@ ipcMain.handle("get-pc-stats", async () => {
 
 ipcMain.handle("run-safe-optimizer", async () => {
   const optimizerScript = `
+    $closed = @();
+    $protected = @();
+    $suggested = @();
+    $errors = @();
+    $memoryFreed = 0;
+
     try {
       ipconfig /flushdns | Out-Null;
-      $dns = "Refreshed"
+      $dns = "Refreshed";
     } catch {
-      $dns = "Skipped"
+      $dns = "Skipped";
+    }
+
+    $protectedPatterns = @(
+      "^system$", "^idle$", "^registry$", "^secure system$", "^smss$", "^csrss$", "^wininit$", "^winlogon$",
+      "^services$", "^lsass$", "^svchost$", "^dwm$", "^explorer$", "^taskhostw$", "^sihost$", "^fontdrvhost$",
+      "^audiodg$", "^spoolsv$", "^ctfmon$", "^wlanext$", "^wmiprvse$", "^msmpeng$", "^securityhealthservice$",
+      "^nissrv$", "^powershell$", "^pwsh$", "^cmd$", "^conhost$", "^node$", "^electron$", "^halosense$",
+      "^code$", "^chrome$", "^msedge$", "^firefox$", "^brave$", "^opera$", "^steam$", "^epicgameslauncher$", "^battle.net$", "^riotclientservices$",
+      "lighting", "aura", "armoury", "crate", "icue", "corsair", "razer", "synapse", "signalrgb", "openrgb", "rgb", "mystic",
+      "lghub", "logitech", "steelseries", "nzxt", "cam", "gigabyte", "msi", "gskill", "hyperx", "thermaltake", "tt rgb", "polychrome"
+    );
+
+    $safeClosable = @(
+      "Widgets", "PhoneExperienceHost", "YourPhone", "GameBar", "GameBarFTServer", "GameBarPresenceWriter", "XboxGameBar", "Cortana"
+    );
+
+    function Test-ProtectedProcess($name) {
+      foreach ($pattern in $protectedPatterns) {
+        if ($name -match $pattern) { return $true; }
+      }
+      return $false;
+    }
+
+    function Test-SafeClosableProcess($name) {
+      foreach ($safeName in $safeClosable) {
+        if ($name -ieq $safeName) { return $true; }
+      }
+      if ($name -like "GameBar*") { return $true; }
+      if ($name -like "Xbox*") { return $true; }
+      return $false;
+    }
+
+    $processes = Get-Process |
+      Where-Object { $_.Id -ne $PID -and $_.WorkingSet64 -gt 0 } |
+      Sort-Object WorkingSet64 -Descending;
+
+    foreach ($process in $processes) {
+      $name = $process.ProcessName;
+      $memoryMB = [math]::Round($process.WorkingSet64 / 1MB, 0);
+      $hasWindow = -not [string]::IsNullOrWhiteSpace($process.MainWindowTitle);
+      $isProtected = Test-ProtectedProcess $name;
+      $isSafeClosable = Test-SafeClosableProcess $name;
+
+      if ($isProtected) {
+        if ($memoryMB -ge 80 -and $protected.Count -lt 12) {
+          $protected += [pscustomobject]@{ Name = $name; MemoryMB = $memoryMB; Reason = "Protected app, system app, browser, launcher, or RGB/lighting software" };
+        }
+        continue;
+      }
+
+      if ($isSafeClosable -and -not $hasWindow -and $memoryMB -ge 40) {
+        try {
+          Stop-Process -Id $process.Id -Force -ErrorAction Stop;
+          $memoryFreed += $memoryMB;
+          $closed += [pscustomobject]@{ Name = $name; MemoryMB = $memoryMB; Reason = "Safe optional background process" };
+        } catch {
+          $errors += [pscustomobject]@{ Name = $name; MemoryMB = $memoryMB; Reason = "Could not close safely" };
+        }
+        continue;
+      }
+
+      if (-not $hasWindow -and $memoryMB -ge 250 -and $suggested.Count -lt 6) {
+        $suggested += [pscustomobject]@{ Name = $name; MemoryMB = $memoryMB; Reason = "High-memory background process; review before closing" };
+      }
     }
 
     [pscustomobject]@{
       FilesDeleted = 0;
       PersonalFilesTouched = $false;
       DNS = $dns;
-      Message = "Safe optimizer completed. No files were deleted."
-    } | ConvertTo-Json -Compress
+      ClosedCount = $closed.Count;
+      MemoryFreedMB = $memoryFreed;
+      ProtectedCount = $protected.Count;
+      SuggestedCount = $suggested.Count;
+      ClosedApps = $closed;
+      ProtectedApps = $protected;
+      SuggestedApps = $suggested;
+      Errors = $errors;
+      Message = "Smart optimizer completed. Safe background cleanup ran without touching personal files. RGB and lighting apps were protected."
+    } | ConvertTo-Json -Compress -Depth 5
   `;
 
-  const raw = await runPowerShell(optimizerScript, 12000);
+  const raw = await runPowerShell(optimizerScript, 15000);
 
   try {
     return JSON.parse(raw);
@@ -509,7 +587,15 @@ ipcMain.handle("run-safe-optimizer", async () => {
       FilesDeleted: 0,
       PersonalFilesTouched: false,
       DNS: "Skipped",
-      Message: "Safe optimizer completed. No files were deleted."
+      ClosedCount: 0,
+      MemoryFreedMB: 0,
+      ProtectedCount: 0,
+      SuggestedCount: 0,
+      ClosedApps: [],
+      ProtectedApps: [],
+      SuggestedApps: [],
+      Errors: [],
+      Message: "Smart optimizer completed, but detailed cleanup results were unavailable. No files were deleted."
     };
   }
 });

@@ -12,6 +12,13 @@ let processTimer = null;
 let lastScore = 0;
 let lastManualViewChangeAt = 0;
 let lastDetailSignature = "";
+let performanceHistory = [];
+
+const maxPerformanceSamples = 60;
+const graphWidth = 640;
+const graphHeight = 230;
+const graphTopPadding = 16;
+const graphBottomPadding = 24;
 
 const defaultSettings = {
   refreshMs: 3500,
@@ -170,6 +177,321 @@ function detailMeter(label, value, barValue, level, note) {
         <div class="fill ${level}" style="width:${clamp(barValue)}%"></div>
       </div>
       <p>${note}</p>
+    </div>
+  `;
+}
+
+function getSampleLabel() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+function recordPerformanceSample(stats, score, online) {
+  const bestTemp = Math.max(stats.cpuTempC || 0, stats.gpuTempC || 0);
+
+  const sample = {
+    time: Date.now(),
+    label: getSampleLabel(),
+    score: clamp(score),
+    cpu: clamp(stats.cpuUsagePercent),
+    gpu: stats.gpuUsagePercent === null ? null : clamp(stats.gpuUsagePercent),
+    memory: clamp(stats.ramUsagePercent),
+    storage: clamp(stats.diskPercent),
+    cpuTemp: stats.cpuTempC === null ? null : clamp(tempToBar(stats.cpuTempC)),
+    cpuTempRaw: stats.cpuTempC,
+    gpuTemp: stats.gpuTempC === null ? null : clamp(tempToBar(stats.gpuTempC)),
+    gpuTempRaw: stats.gpuTempC,
+    temp: bestTemp > 0 ? clamp(tempToBar(bestTemp)) : null,
+    tempRaw: bestTemp > 0 ? bestTemp : null,
+    network: online ? 100 : 0
+  };
+
+  performanceHistory.push(sample);
+
+  if (performanceHistory.length > maxPerformanceSamples) {
+    performanceHistory = performanceHistory.slice(-maxPerformanceSamples);
+  }
+}
+
+function valueForGraph(sample, metric) {
+  if (!sample) return null;
+
+  const value = sample[metric.key];
+
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return null;
+  }
+
+  return clamp(value);
+}
+
+function metricValueForStats(sample, metric) {
+  if (!sample) return null;
+
+  if (metric.type === "temp") {
+    const raw = sample[metric.rawKey];
+    return raw === null || raw === undefined || !Number.isFinite(Number(raw)) ? null : Number(raw);
+  }
+
+  const value = sample[metric.key];
+  return value === null || value === undefined || !Number.isFinite(Number(value)) ? null : Number(value);
+}
+
+function formatMetricNumber(metric, value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "--";
+
+  if (metric.type === "temp") {
+    return `${Math.round(value)}°C`;
+  }
+
+  return `${Math.round(value)}%`;
+}
+
+function formatMetricValue(metric, sample) {
+  return formatMetricNumber(metric, metricValueForStats(sample, metric));
+}
+
+function getMetricStats(metric) {
+  const values = performanceHistory
+    .map((sample) => metricValueForStats(sample, metric))
+    .filter((value) => value !== null && value !== undefined && Number.isFinite(Number(value)));
+
+  const current = metricValueForStats(performanceHistory[performanceHistory.length - 1], metric);
+
+  if (values.length === 0) {
+    return {
+      current: null,
+      average: null,
+      peak: null,
+      low: null,
+      trend: "Collecting",
+      status: "Waiting"
+    };
+  }
+
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const peak = Math.max(...values);
+  const low = Math.min(...values);
+  const compareFrom = values[Math.max(0, values.length - 6)];
+  const diff = current === null || compareFrom === null ? 0 : current - compareFrom;
+
+  let trend = "Stable";
+  if (diff >= 8) trend = `Rising +${Math.round(diff)}`;
+  if (diff <= -8) trend = `Dropping ${Math.round(diff)}`;
+
+  let status = "Normal";
+
+  if (metric.type === "temp") {
+    if (current >= settings.tempHotC) status = "Hot";
+    else if (current >= settings.tempWarnC) status = "Warm";
+  } else {
+    if (current >= 85) status = "Heavy";
+    else if (current >= 70) status = "Elevated";
+  }
+
+  return { current, average, peak, low, trend, status };
+}
+
+function graphY(value, height = graphHeight) {
+  const top = graphTopPadding;
+  const bottom = graphBottomPadding;
+  const chartHeight = height - top - bottom;
+  return top + chartHeight - (clamp(value) / 100) * chartHeight;
+}
+
+function graphX(index, total, width = graphWidth) {
+  if (total <= 1) return width;
+  return (index / (total - 1)) * width;
+}
+
+function buildGraphSegments(metric, width = graphWidth, height = graphHeight) {
+  if (performanceHistory.length === 0) return [];
+
+  const samples = performanceHistory.length === 1
+    ? [performanceHistory[0], performanceHistory[0]]
+    : performanceHistory;
+
+  const segments = [];
+  let current = [];
+
+  samples.forEach((sample, index) => {
+    const value = valueForGraph(sample, metric);
+
+    if (value === null) {
+      if (current.length > 0) {
+        segments.push(current);
+        current = [];
+      }
+      return;
+    }
+
+    current.push({
+      x: graphX(index, samples.length, width),
+      y: graphY(value, height),
+      value
+    });
+  });
+
+  if (current.length > 0) segments.push(current);
+
+  return segments;
+}
+
+function pointsToPath(points) {
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(" ");
+}
+
+function buildGraphAreaPath(metric, width = graphWidth, height = graphHeight) {
+  const segments = buildGraphSegments(metric, width, height);
+  const longest = segments.sort((a, b) => b.length - a.length)[0];
+
+  if (!longest || longest.length < 2) return "";
+
+  const baseline = graphY(0, height);
+  const line = pointsToPath(longest);
+  const first = longest[0];
+  const last = longest[longest.length - 1];
+
+  return `${line} L ${last.x.toFixed(1)} ${baseline.toFixed(1)} L ${first.x.toFixed(1)} ${baseline.toFixed(1)} Z`;
+}
+
+function buildGraphPaths(metric, index) {
+  const segments = buildGraphSegments(metric);
+
+  return segments
+    .filter((segment) => segment.length >= 2)
+    .map((segment) => `<path class="graph-line graph-line-${index}" d="${pointsToPath(segment)}" />`)
+    .join("");
+}
+
+function getGraphAxisLabels(metrics) {
+  const tempOnly = metrics.length > 0 && metrics.every((metric) => metric.type === "temp");
+
+  if (tempOnly) {
+    return ["100°C", "75°C", "50°C", "25°C", "0°C"];
+  }
+
+  return ["100%", "75%", "50%", "25%", "0%"];
+}
+
+function renderGraphQuickStats(metric) {
+  const stats = getMetricStats(metric);
+
+  return `
+    <div class="graph-quick-stats">
+      <div>
+        <span>Current</span>
+        <strong>${formatMetricNumber(metric, stats.current)}</strong>
+      </div>
+      <div>
+        <span>Average</span>
+        <strong>${formatMetricNumber(metric, stats.average)}</strong>
+      </div>
+      <div>
+        <span>Peak</span>
+        <strong>${formatMetricNumber(metric, stats.peak)}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>${stats.status}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function renderPerformanceGraph(title, subtitle, metrics) {
+  const last = performanceHistory[performanceHistory.length - 1];
+  const firstLabel = performanceHistory[0]?.label || "60s ago";
+  const lastLabel = last?.label || "Now";
+  const axisLabels = getGraphAxisLabels(metrics);
+  const tempOnly = metrics.length > 0 && metrics.every((metric) => metric.type === "temp");
+  const axisTitle = tempOnly ? "Temperature scale" : "Usage scale";
+  const hasEnoughSamples = performanceHistory.length >= 2;
+  const hasAnyData = metrics.some((metric) => performanceHistory.some((sample) => valueForGraph(sample, metric) !== null));
+
+  const area = metrics.length === 1
+    ? `<path class="graph-area graph-area-0" d="${buildGraphAreaPath(metrics[0])}" />`
+    : "";
+
+  const paths = metrics
+    .map((metric, index) => buildGraphPaths(metric, index))
+    .join("");
+
+  const legend = metrics
+    .map((metric, index) => {
+      const stats = getMetricStats(metric);
+
+      return `
+        <div class="graph-legend-item">
+          <span class="legend-dot legend-dot-${index}"></span>
+          <span>${metric.label}</span>
+          <strong>${formatMetricNumber(metric, stats.current)}</strong>
+          <em>avg ${formatMetricNumber(metric, stats.average)} · peak ${formatMetricNumber(metric, stats.peak)}</em>
+        </div>
+      `;
+    })
+    .join("");
+
+  const quickStats = metrics.length === 1 ? renderGraphQuickStats(metrics[0]) : "";
+
+  const emptyNote = !hasAnyData
+    ? `<div class="graph-empty">This sensor is unavailable right now.</div>`
+    : !hasEnoughSamples
+    ? `<div class="graph-empty">Collecting live samples. The graph fills in after the next scan.</div>`
+    : "";
+
+  return `
+    <div class="performance-graph-card">
+      <div class="graph-head">
+        <div>
+          <span class="graph-kicker">TASK MANAGER STYLE</span>
+          <h4>${title}</h4>
+          <p>${subtitle}</p>
+        </div>
+        <div class="graph-window-label">${axisTitle} · fixed 0–100 · 60-sample history</div>
+      </div>
+
+      ${quickStats}
+
+      <div class="graph-frame">
+        <div class="graph-y-axis">
+          <span>${axisLabels[0]}</span>
+          <span>${axisLabels[1]}</span>
+          <span>${axisLabels[2]}</span>
+          <span>${axisLabels[3]}</span>
+          <span>${axisLabels[4]}</span>
+        </div>
+
+        <div class="graph-plot-area">
+          <svg class="performance-graph" viewBox="0 0 640 230" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="graph-danger-zone" x="0" y="16" width="640" height="29"></rect>
+            <rect class="graph-warning-zone" x="0" y="45" width="640" height="28"></rect>
+            <line class="graph-grid-line" x1="0" y1="16" x2="640" y2="16"></line>
+            <line class="graph-grid-line" x1="0" y1="63.5" x2="640" y2="63.5"></line>
+            <line class="graph-grid-line" x1="0" y1="111" x2="640" y2="111"></line>
+            <line class="graph-grid-line" x1="0" y1="158.5" x2="640" y2="158.5"></line>
+            <line class="graph-edge-line" x1="0" y1="206" x2="640" y2="206"></line>
+            ${area}
+            ${paths}
+          </svg>
+          ${emptyNote}
+        </div>
+      </div>
+
+      <div class="graph-footer">
+        <span>${firstLabel}</span>
+        <strong>Live rolling history · ${performanceHistory.length}/${maxPerformanceSamples} samples</strong>
+        <span>${lastLabel}</span>
+      </div>
+
+      <div class="graph-legend">
+        ${legend}
+      </div>
     </div>
   `;
 }
@@ -436,6 +758,12 @@ function buildDetail(view) {
             <strong>${getNextBestAction(s, online)}</strong>
           </div>
         </div>
+        ${renderPerformanceGraph("Performance trend", "CPU, GPU, memory, and storage across recent scans.", [
+          { key: "cpu", label: "CPU" },
+          { key: "gpu", label: "GPU" },
+          { key: "memory", label: "Memory" },
+          { key: "storage", label: "Storage" }
+        ])}
         <div class="detail-grid">
           ${stat("CPU", `${s.cpuUsagePercent}%`)}
           ${stat("Memory", `${s.ramUsagePercent}%`)}
@@ -481,6 +809,9 @@ function buildDetail(view) {
       subtitle: "Processor load, threads, and temperature visibility.",
       body: `
         ${detailMeter("CPU load", `${s.cpuUsagePercent}%`, s.cpuUsagePercent, level, "Live processor activity.")}
+        ${renderPerformanceGraph("CPU usage graph", "Recent processor load from live scans.", [
+          { key: "cpu", label: "CPU" }
+        ])}
         <div class="detail-grid">
           ${stat("Threads", s.cpuThreads)}
           ${stat("Temperature", s.cpuTempC === null ? "Currently unavailable" : `${s.cpuTempC}°C`)}
@@ -509,6 +840,9 @@ function buildDetail(view) {
       subtitle: "Graphics load, temperature, and VRAM usage.",
       body: `
         ${detailMeter("GPU load", s.gpuUsagePercent === null ? "Unavailable" : `${s.gpuUsagePercent}%`, usage, level, "Live graphics usage.")}
+        ${renderPerformanceGraph("GPU usage graph", "Recent graphics load from live scans.", [
+          { key: "gpu", label: "GPU" }
+        ])}
         <div class="detail-grid">
           ${stat("Temperature", s.gpuTempC === null ? "Currently unavailable" : `${s.gpuTempC}°C`)}
           ${stat("VRAM", vram)}
@@ -532,6 +866,9 @@ function buildDetail(view) {
       subtitle: "RAM usage and active memory pressure.",
       body: `
         ${detailMeter("Memory used", `${s.ramUsagePercent}%`, s.ramUsagePercent, level, "Live RAM pressure.")}
+        ${renderPerformanceGraph("Memory usage graph", "Recent RAM pressure from live scans.", [
+          { key: "memory", label: "Memory" }
+        ])}
         <div class="detail-grid">
           ${stat("Free RAM", `${s.freeRamGB} GB`)}
           ${stat("Total RAM", `${s.totalRamGB} GB`)}
@@ -551,6 +888,9 @@ function buildDetail(view) {
       subtitle: "C: drive capacity and free space.",
       body: `
         ${detailMeter("C: drive used", `${s.diskPercent}%`, s.diskPercent, level, "Main drive usage.")}
+        ${renderPerformanceGraph("Storage usage graph", "C: drive usage over recent scans.", [
+          { key: "storage", label: "Storage" }
+        ])}
         <div class="detail-grid">
           ${stat("Free space", `${s.diskFreeGB} GB`)}
           ${stat("Total size", `${s.diskTotalGB} GB`)}
@@ -574,6 +914,10 @@ function buildDetail(view) {
       subtitle: "Thermal readings from available Windows or driver sensors.",
       body: `
         ${detailMeter("Highest temp", bestTemp ? `${bestTemp}°C` : "Unavailable", tempToBar(bestTemp), level, "Best available thermal reading.")}
+        ${renderPerformanceGraph("Temperature graph", "Recent CPU and GPU temperatures when available.", [
+          { key: "cpuTemp", label: "CPU temp", type: "temp", rawKey: "cpuTempRaw" },
+          { key: "gpuTemp", label: "GPU temp", type: "temp", rawKey: "gpuTempRaw" }
+        ])}
         <div class="detail-grid">
           ${stat("CPU temp", s.cpuTempC === null ? "Currently unavailable" : `${s.cpuTempC}°C`)}
           ${stat("GPU temp", s.gpuTempC === null ? "Currently unavailable" : `${s.gpuTempC}°C`)}
@@ -1067,6 +1411,7 @@ async function loadStats() {
 
     const score = calculateScore(s, online);
     lastScore = score;
+    recordPerformanceSample(s, score, online);
 
     const advice = getAdvice(s, online);
 
@@ -1102,14 +1447,33 @@ async function loadStats() {
 }
 
 async function runSafeOptimizer() {
-  setText("optimizerStatus", "Running safe optimizer. No files are deleted.");
+  setText("optimizerStatus", "Running smart optimizer. No personal files touched. RGB apps are protected.");
 
   const result = await ipcRenderer.invoke("run-safe-optimizer");
 
   await loadStats();
   await loadTopProcesses();
 
-  setText("optimizerStatus", `${result.Message} DNS cache: ${result.DNS}.`);
+  const closedCount = Number(result.ClosedCount || 0);
+  const freedMB = Number(result.MemoryFreedMB || 0);
+  const protectedCount = Number(result.ProtectedCount || 0);
+  const suggestedCount = Number(result.SuggestedCount || 0);
+  const closedNames = Array.isArray(result.ClosedApps)
+    ? result.ClosedApps.slice(0, 3).map((app) => app.Name).join(", ")
+    : "";
+
+  const closedText = closedCount > 0
+    ? `Closed ${closedCount} safe background item(s)${closedNames ? `: ${closedNames}` : ""}. Freed about ${freedMB} MB.`
+    : "No safe background apps needed closing.";
+
+  const suggestionText = suggestedCount > 0
+    ? ` ${suggestedCount} heavy background item(s) were only suggested, not auto-closed.`
+    : "";
+
+  setText(
+    "optimizerStatus",
+    `${closedText} RGB/system protected: ${protectedCount}. DNS cache: ${result.DNS}.${suggestionText}`
+  );
 }
 
 async function saveHealthReport() {
